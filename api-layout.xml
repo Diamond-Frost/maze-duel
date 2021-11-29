@@ -1,0 +1,89 @@
+<base host="localhost" port="">
+    <responseObjects>
+        <object identifier="ApiLayout" language="json">
+            <property key="url" type="string" />
+            <property key="method" type="string" />
+            <property key="query" type="array<string>" />
+            <property key="description" type="string" />
+            <property key="response" type="string | object" />
+        </object>
+        <object identifier="Game" language="json">
+            <property key="id" type="string(guid)" />
+            <property key="size" type="number(ushort)" />
+            <property key="max" type="number(ushort)" />
+            <property key="min" type="number(ushort)" />
+            <property key="players" type="array<object(Player)>" />
+            <property key="tiles" type="array<object(Tile)>" />
+            <property key="cards" type="array<object(Card)>" />
+            <property key="createdDate" type="number(datetime)" />
+        </object>
+        <object identifier="Player" language="json">
+            <property key="id" type="string(guid)" />
+            <property key="ready" type="boolean" />
+            <property key="heldCards" type="array<object(Card)>">
+        </object>
+        <object identifier="Card" language="json">
+            <property key="id" type="string(guid)" />
+            <property key="location" type="number(ushort)" />
+            <property key="item" type="string" />
+        </object>
+        <object identifier="Tile" language="json" />
+            <property key="id" type="string(guid)" />
+            <property key="location" type="number(ushort)" />
+            <property key="orientation" type="number(EOrientation(ushort))" />
+            <property key="type" type="number(EType(ushort))" />
+        </object>
+    </responseObjects>
+    <requestObjects>
+        <object identifier="Game">
+            <property key="size" type="number(ushort)" />
+            <property key="max" type="number(ushort)" />
+            <property key="min" type="number(ushort)" />
+            <property key="items" type="array<string>" />
+            <property key="tiles" type="array<object(Tile)>" />
+        </object>
+        <object identifier="Tile">
+            <property key="location" type="number(ushort)" />
+            <property key="orientation" type="number(ushort)" />
+        </object>
+        <object identifier="UpdateTile">
+            <property key="gameId" type="string(guid)" />
+            <property key="playerId" type="string(guid)" />
+            <property key="tileId" type="string(guid)" />
+            <property key="location" type="number(ushort)" />
+        </object>
+        <object identifier="BulkUpdateTile">
+            <property key="gameId" type="string(guid)" />
+            <property key="playerId" type="string(guid)" />
+            <property key="tiles" type="array<object(BulkTile)>" />
+        </object>
+        <object identifier="BulkTile">
+            <property key="id" type="string(guid)" />
+            <property key="location" type="number(ushort)" />
+        </object>
+    </requestObjects>
+    <route url="api" method="options" response="array<object>" active="false">
+        <route url="game" method="get post delete">
+            <method method="get"    response="object(Game)"      query="game"           description="Returns info about a given game" />
+            <method method="post"   response="{id=string(guid)}" request="object(Game)" description="Create a new Game" />
+            <method method="delete" response="void"              query="game"           description="Ends a given game" />
+            
+            <route url="check" method="get patch" query="game">
+                <method method="get"   response="{exist=boolean}"   description="Check if game exists" />
+                <method method="patch" response="{started=boolean}" description="Attempt to start a game" />
+            </route>
+        </route>
+        <route url="player" method="get post patch delete" query="game">
+            <method method="get"    response="object(Game)"      query="player" description="Returns info about a given game" />
+            <method method="post"   response="{id=string(guid)}"                description="Allows a player to join a game, returning the player's ID" />
+            <method method="delete" response="void"              query="player" description="Removes a player from the given game" />
+            <method method="patch"  response="{state=boolean}"   query="player" description="Toggles the given player's ready state"/>
+        
+            <route url="next" method="get" response="object(Card)" query="player game" description="Gets the next card, assigning it to the player's held cards in the process"/>
+        </route>
+        <route url="tile" method="post put" response="{path=boolean}">
+            <method method="post" request="UpdateTile"     description="Updates a Tile's position and checks if the player can move." />
+            <method method="put"  request="BulkUpdateTile" description="Updates the game's tiles, and checks if the player can move to their goal." />
+        </route>
+    </route>
+</base>
